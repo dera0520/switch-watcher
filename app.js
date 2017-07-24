@@ -17,7 +17,9 @@ const shops = {
     name: 'Amazon',
     checkStore: client => {
       return client.evaluate(() => {
-        const rawPrice = document.querySelector('#priceblock_ourprice').innerText;
+        const dom = document.querySelector('#priceblock_ourprice')
+        if (!dom) return false;
+        const rawPrice = dom.innerText;
         const price = Number(
           rawPrice
             .substr(1)
@@ -34,7 +36,9 @@ const shops = {
       name: 'ヤマダ電機:スプラトゥーン2セット',
       checkStore: client => {
         return client.evaluate(() => {
-          return document.querySelector('p.note').innerText !== '好評につき売り切れました';
+          const dom = document.querySelector('p.note')
+          if (!dom) return false;
+          return dom.innerText !== '好評につき売り切れました';
         });
       }
     },
@@ -43,7 +47,9 @@ const shops = {
       name: 'ヤマダ電機:Joy-Con(L)　ネオンブルー/(R)　ネオンレッド',
       checkStore: client => {
         return client.evaluate(() => {
-          return document.querySelector('p.note').innerText !== '好評につき売り切れました';
+          const dom = document.querySelector('p.note')
+          if (!dom) return false;
+          return dom.innerText !== '好評につき売り切れました';
         });
       }
     },
@@ -52,7 +58,9 @@ const shops = {
       name: 'ヤマダ電機:Joy-Con(L)/(R)　グレー',
       checkStore: client => {
         return client.evaluate(() => {
-          return document.querySelector('p.note').innerText !== '好評につき売り切れました';
+          const dom = document.querySelector('p.note')
+          if (!dom) return false;
+          return dom.innerText !== '好評につき売り切れました';
         });
       }
     }
@@ -63,7 +71,7 @@ const shops = {
       name: 'ヨドバシカメラ:スプラトゥーン2セット',
       checkStore: client => {
         return client.evaluate(() => {
-          return document.querySelector('#js_buyBoxMain p').innerText !== '予約受付を終了しました';
+          return !['予定数の販売を終了しました', '予約受付を終了しました'].includes(document.querySelector('#js_buyBoxMain p').innerText);
         });
       }
     },
@@ -72,7 +80,7 @@ const shops = {
       name: 'ヨドバシカメラ:モンスターハンターダブルクロス Nintendo Switch Ver. スペシャルパック',
       checkStore: client => {
         return client.evaluate(() => {
-          return document.querySelector('#js_buyBoxMain p').innerText !== '予約受付を終了しました';
+          return !['予定数の販売を終了しました', '予約受付を終了しました'].includes(document.querySelector('#js_buyBoxMain p').innerText);
         });
       }
     },
@@ -81,7 +89,7 @@ const shops = {
       name: 'ヨドバシカメラ:Joy-Con(L)ネオンブルー/(R)ネオンレッド',
       checkStore: client => {
         return client.evaluate(() => {
-          return document.querySelector('#js_buyBoxMain p').innerText !== '予定数の販売を終了しました';
+          return !['予定数の販売を終了しました', '予約受付を終了しました'].includes(document.querySelector('#js_buyBoxMain p').innerText);
         });
       }
     },
@@ -90,7 +98,7 @@ const shops = {
       name: 'ヨドバシカメラ:Joy-Con(L)/(R)グレー',
       checkStore: client => {
         return client.evaluate(() => {
-          return document.querySelector('#js_buyBoxMain p').innerText !== '予定数の販売を終了しました';
+          return !['予定数の販売を終了しました', '予約受付を終了しました'].includes(document.querySelector('#js_buyBoxMain p').innerText);
         });
       }
     }
@@ -300,4 +308,4 @@ async function main () {
 }
 
 logger('Start Switch Watcher');
-new CronJob('0 */15 * * * *', main).start();
+new CronJob('0 */3 * * * *', main).start();
