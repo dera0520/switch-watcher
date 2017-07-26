@@ -1,6 +1,7 @@
 const CronJob = require('cron').CronJob;
 const Chromy = require('chromy');
 const opn = require('opn');
+const request = require('request');
 
 const shops = {
   nintendo: {
@@ -160,12 +161,55 @@ const shops = {
     }
   },
   seven: {
-    url: 'http://7net.omni7.jp/detail/2110595636',
-    name: 'セブンネットショッピング',
-    checkStore: client => {
-      return client.evaluate(() => {
-        return document.querySelector('.btnStrongest input').getAttribute('title') !== '在庫切れ';
-      });
+    gray: {
+        url: 'http://7net.omni7.jp/detail/2110595636',
+        name: 'セブンネットショッピング:グレイ',
+        checkStore: client => {
+          return client.evaluate(() => {
+            return document.querySelector('.btnStrongest input').getAttribute('title') !== '在庫切れ';
+          });
+        }
+    },
+    color: {
+        url: 'http://7net.omni7.jp/detail/2110595637',
+        name: 'セブンネットショッピング:Joy-Con(L)　ネオンブルー/(R)　ネオンレッド',
+        checkStore: client => {
+          return client.evaluate(() => {
+            return document.querySelector('.btnStrongest input').getAttribute('title') !== '在庫切れ';
+          });
+        }
+    }
+  },
+  yokado: {
+    splatoon: {
+        url: 'http://iyec.omni7.jp/detail/4902370537338',
+        name: 'ヨーカドーネットショップ:スプラトゥーンセット',
+        checkStore: client => {
+          return client.evaluate(() => {
+            console.log(document.querySelector('.btnStrongest input').getAttribute('title'));
+            return document.querySelector('.btnStrongest input').getAttribute('title') !== 'SOLD OUT';
+          });
+        }
+    },
+    gray: {
+        url: 'http://iyec.omni7.jp/detail/4902370535709',
+        name: 'ヨーカドーネットショップ:グレイ',
+        checkStore: client => {
+          return client.evaluate(() => {
+            console.log(document.querySelector('.btnStrongest input').getAttribute('title'));
+            return document.querySelector('.btnStrongest input').getAttribute('title') !== '在庫切れ';
+          });
+        }
+    },
+    color: {
+        url: 'http://iyec.omni7.jp/detail/4902370535716',
+        name: 'ヨーカドーネットショップ:Joy-Con(L)　ネオンブルー/(R)　ネオンレッド',
+        checkStore: client => {
+          return client.evaluate(() => {
+            console.log(document.querySelector('.btnStrongest input').getAttribute('title'));
+            return document.querySelector('.btnStrongest input').getAttribute('title') !== '在庫切れ';
+          });
+        }
     }
   },
   rakuten: {
@@ -262,6 +306,23 @@ function logger(msg) {
   console.log(zeroPadding(now.getHours(), 2) + ':' + zeroPadding(now.getMinutes(), 2) + ' > ' + msg);
 }
 
+function sendToSlack(options){
+    var message = "在庫が復活したページを見つけたよ！\n"+ options.name + "\n" + options.url;
+    var request_data = {
+        url: 'https://hooks.slack.com/services/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+        form: `payload={"text": "${message}", "username": "switch-watcher","icon_emoji": ":angel:"}`,
+        json :true
+    };
+
+    request.post(request_data, function(error, response, body){
+      if (!error && response.statusCode == 200) {
+        console.log(body.name);
+      } else {
+        console.log('error: '+ response.statusCode + body);
+      }
+    });
+}
+
 async function check(client, options) {
   try {
     await client.goto(options.url);
@@ -269,11 +330,12 @@ async function check(client, options) {
     if (result) {
       logger(`[${options.name}] \u001b[31mNow is the Time!!!\u001b[0m`);
       opn(options.url);
+      sendToSlack(options);
     } else {
       logger(`[${options.name}] \u001b[34mNow is Not the Time...\u001b[0m`);
     }
   } catch(e) {
-    logger(e);
+    // logger(e);
   }
 }
 
@@ -285,19 +347,23 @@ async function main () {
   await check(chromy, shops.yamada.color);
   await check(chromy, shops.yamada.gray);
   await check(chromy, shops.yodobashi.splatoon);
-  await check(chromy, shops.yodobashi.monster);
+  // await check(chromy, shops.yodobashi.monster);
   await check(chromy, shops.yodobashi.color);
   await check(chromy, shops.yodobashi.gray);
   await check(chromy, shops.nojima.splatoon);
-  await check(chromy, shops.nojima.monster);
+  // await check(chromy, shops.nojima.monster);
   await check(chromy, shops.nojima.color);
   await check(chromy, shops.nojima.color2);
   await check(chromy, shops.nojima.gray);
   await check(chromy, shops.nojima.gray2);
-  await check(chromy, shops.seven);
+  await check(chromy, shops.seven.gray);
+  await check(chromy, shops.seven.color);
+  await check(chromy, shops.yokado.splatoon);
+  await check(chromy, shops.yokado.gray);
+  await check(chromy, shops.yokado.color);
   await check(chromy, shops.rakuten.onetwo);
-  await check(chromy, shops.rakuten.marica);
-  await check(chromy, shops.rakuten.zelda);
+  // await check(chromy, shops.rakuten.marica);
+  // await check(chromy, shops.rakuten.zelda);
   await check(chromy, shops.rakuten.splatoon);
   await check(chromy, shops.rakuten.color);
   await check(chromy, shops.rakuten.color2);
@@ -308,4 +374,4 @@ async function main () {
 }
 
 logger('Start Switch Watcher');
-new CronJob('0 */3 * * * *', main).start();
+new CronJob('* */2 * * * *', main).start();
